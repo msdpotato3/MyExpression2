@@ -121,6 +121,9 @@ function stopRecordMotion(Filename:string){
 
 function void loadFile(Filename:string){
 
+    #todo:
+    #write a queue lib for loading file one at a time 
+
     #trigger when file is clicking
     runOnFile(1)
 ##    #check the existence of the file 
