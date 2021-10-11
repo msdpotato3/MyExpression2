@@ -1,0 +1,71 @@
+@name ChatCommandLib
+@persist
+@persist
+@persist
+
+#load command set
+#include "command_set"
+
+# >>bar1,url
+
+function string getchatCommand(){
+    #settings
+    local Cmdlable = ">>"
+    
+    
+    runOnChat(1)
+    local Lastmsg = lastSaid()
+    local Lastmsgppl = lastSpoke()
+
+    #if the trimed chat start with command lable(Cmdlable)
+    if(Lastmsg:trim():left(Cmdlable:length()) == Cmdlable){
+        #return 
+        return Lastmsg:sub(Cmdlable:length()+1)
+    }
+    else{
+        return ""
+    }
+}
+
+
+
+
+#==========
+runOnChat(1)
+#Command = getchatCommand()
+
+#if command is exist in Cmdset
+if( Cmdset:exists(getchatCommand()) ){
+    #execute the command
+    getchatCommand()()
+}
+#otherwise print error message
+else{
+    print( getchatCommand() )
+}
+
+
+
+#[
+if(Command != ""){
+    switch(Command){
+        case "hi",
+            print("hello")
+        break
+        
+        
+        case "abc",
+            print("efg")
+        break
+        
+        
+        case "asdf",
+            print("jkl;")
+        break
+        
+        
+        default,
+        break 
+    }
+}
+]#

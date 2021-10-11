@@ -1,0 +1,12 @@
+@name checkbutton
+
+runOnKeys(owner(),1)
+
+function number checkbutton(Button:string){
+    if(keyClk()){
+        if(owner():keyPressed(Button) & changed(owner():keyPressed(Button)) ){
+            return 1
+        }
+    }
+}
+

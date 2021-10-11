@@ -1,0 +1,239 @@
+@name pidtest3
+@inputs ObjHeight Egp:wirelink  
+@outputs Thrust Hundred Fifity AvgSumError IError
+@persist [DesireGraph,ObjHeightGraph,ErrorGraph,PGraph,IGraph,DGraph]:array SumError IError Timerdelay Timerswitch AvgSumError LastError BaseHeight DesireHeight P I D Hundred Fifity PastErrors:array
+#include "repository/lib/egpdatavisualizerlib"
+
+interval(100)
+BaseHeight = entity():pos():x()
+
+ 
+runOnKeys(owner(),1,array("j","k","l","semicolon","i","o"))
+runOnChat(1)
+#---------------------function
+function number locPIDCalc(SetPoint , Nextpoint){
+#    IError=0 ,DError=0,Times=0
+    IError = SetPoint - Nextpoint
+    
+    PastErrors:pop()
+    PastErrors:insertNumber(1,IError)
+#    SumError += IError
+    
+    AvgSumError = PastErrors:sum()/20
+    
+    DError = IError - LastError
+    
+    LastError = IError
+    
+#[    print(
+        round(P*IError + I*(SumError/Times) + D*DError,2):toString()+"thrust|"+
+        round(AvgSumError,2):toString()+"AvgSum|"+
+        round(ObjHeight-BaseHeight,2)+"Height"
+    )]#
+    return P*IError + I*(AvgSumError) + D*DError
+#    return P*IError + 1/I*(AvgSumError) + D*DError
+#    return P*IError + I*(1/AvgSumError) + D*DError
+}
+
+function printpid(){
+    print("P="+P:toString() +" I="+I:toString() +" D="+D:toString()+" |>>"+P:toString()+";"+I:toString()+";"+D:toString())
+#    print("P="+P:toString() +" I="+(1/I):toString() +" D="+D:toString())
+    }
+    
+function checkChatCommands() {
+    Command = owner():lastSaid()
+    #>>P;I;D
+#    print(Command)
+    if(Command:left(2) == ">>") {
+        SubCommand = Command:explode(">>")[2, string]
+        
+        P = SubCommand:explode(";")[1,string]:toNumber()
+        I = SubCommand:explode(";")[2,string]:toNumber()
+        D = SubCommand:explode(";")[3,string]:toNumber()
+        
+        printpid()
+    }
+    
+}
+
+#---------------------
+
+if(first()|duped()){
+    PastErrors = array(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+    DesireHeight = 100
+    Timerdelay = 1000
+    Timerswitch = 1
+    timer("switching",Timerdelay)
+    print("-------------start---------------")
+}
+
+
+
+if(Timerswitch == 1 ){
+    timer("switching",Timerdelay)
+    if(clk("switching")){#switching desire height after some time
+        if(DesireHeight == 100){
+            DesireHeight = 50   
+        }
+        else{
+            DesireHeight = 100
+        }
+    #    print("DesireHeight:"+DesireHeight)
+    }
+}
+else{
+    stoptimer("switching")
+}
+
+
+Thrust = locPIDCalc(DesireHeight,ObjHeight-BaseHeight)
+#print(ObjHeight+"|"+BaseHeight+"="+(ObjHeight-BaseHeight):toString())
+if(chatClk()){
+    checkChatCommands()
+}
+
+
+
+
+if(keyClk(owner()) == 1){
+    if(!owner():keyDuck()){
+        switch(keyClkPressed()){
+            case "j",
+                P+=0.1
+                printpid()
+            break
+            
+            case "k",
+                I+=0.1
+                printpid()
+            break
+            
+            case "l",
+                D+=0.1
+                printpid()
+            break
+            
+            case "semicolon",
+                if(DesireHeight == 100){
+                    DesireHeight = 50   
+                }
+                else{
+                    DesireHeight = 100
+                }
+#               print("DesireHeight:"+DesireHeight)
+            break
+            
+            case "i",
+                Timerdelay += 250
+                print("Timerdelay: "+Timerdelay)
+            break
+            
+            case "o",
+                Timerswitch = 1
+                print("auto switching: on")
+            break
+        }
+    }
+    else{
+        switch(keyClkPressed()){
+            case "j",
+                P-=0.1
+                printpid()
+            break
+            
+            case "k",
+                I-=0.1
+                printpid()
+            break
+            
+            case "l",
+                D-=0.1
+                printpid()
+            break
+            
+            case "semicolon",
+                if(DesireHeight == 100){
+                    DesireHeight = 50   
+                }
+                else{
+                    DesireHeight = 100
+                }
+#               print("DesireHeight:"+DesireHeight)
+            break
+            
+            case "i",
+                Timerdelay -= 250
+                print("Timerdelay: "+Timerdelay)
+            break
+            
+            case "o",
+                Timerswitch = 0
+                print("auto switching: off")
+            break
+        }
+    }
+}
+
+if(DesireHeight == 100){#indicator light 
+    Hundred = 1 
+    Fifity = 0
+}
+else{
+    Hundred = 0 
+    Fifity = 1
+}
+
+#-------------Datavisualizer
+BarLeftUpcorner = vec2(120,120*5)
+BarRightDowncorner = vec2(120,120*5)+vec2(30,200)
+
+ChartLeftUpcorner = vec2(120*2,120*5)
+ChartRightDowncorner = vec2(120*2,120*5)+vec2(250,200)
+ChartHGridsubdivide = 200/10
+ChartMaxValue = 120
+ChartMinValue = 0
+ChartHistoryLength = 30
+
+
+
+if(first()|duped()|useClk()){
+    egpbarcreate(Egp,"error","Error",BarLeftUpcorner,BarRightDowncorner)
+    
+    egpchartcreate(Egp,"pid","Red: feedback | Green: target",ChartLeftUpcorner,ChartRightDowncorner,ChartHGridsubdivide,ChartMaxValue,ChartMinValue,ChartHistoryLength)
+    timer("Datavisualizer",100)
+}
+
+if(clk("Datavisualizer")){
+    egpbarupdate(Egp,"error",DesireHeight-(ObjHeight-BaseHeight),BarLeftUpcorner,BarRightDowncorner)
+
+    #Array,Input,Historylength    
+    recordDatatoarray(ObjHeightGraph,ObjHeight-BaseHeight,50)
+    recordDatatoarray(DesireGraph,DesireHeight,50)
+    recordDatatoarray(ErrorGraph,DesireHeight-(ObjHeight-BaseHeight)*2,50)
+    
+    recordDatatoarray(PGraph,P*10,50)
+    recordDatatoarray(IGraph,I*10,50)
+    recordDatatoarray(DGraph,D*10,50)
+    
+    #Egp,Name,Array,ChartLup,ChartRdown,MaxValue,MinValue,Color,Historylength    
+    egpdrawgraph(Egp,"ObjHeightGraph",ObjHeightGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(255,0,0,255),ChartHistoryLength)
+    egpdrawgraph(Egp,"DesireGraph",DesireGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(0,255,0,255),ChartHistoryLength)
+    egpdrawgraph(Egp,"ErrorGraph",ErrorGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(0,0,255,255),ChartHistoryLength)
+
+
+    egpdrawgraph(Egp,"PGraph",PGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(255,255,0,255),ChartHistoryLength)
+    egpdrawgraph(Egp,"IGraph",IGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(0,255,255,255),ChartHistoryLength)
+    egpdrawgraph(Egp,"DGraph",DGraph,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(255,0,255,255),ChartHistoryLength)
+
+
+
+    timer("Datavisualizer",100)
+}
+
+
+
+
+
+
+
+

@@ -1,0 +1,148 @@
+@name 7segclock
+@persist Timestr:string Segnum:table Counter
+@autoupdate
+#-----------------------pre-function
+Chippos = entity():pos()#the position of the chip
+Shift = vec(0,0,50)#shift the 7 seg higher 
+Segpos = array(#the position of the indivisual segment
+    vec(0,0,22),
+    vec(0,-11,11),
+    vec(0,-11,-11),
+    vec(0,0,-22),
+    vec(0,11,-11),
+    vec(0,11,11),
+    vec(0,0,0)
+)
+Segang = array(#the angle of the indivisual segment
+    ang(0,0,0),
+    ang(0,0,90),
+    ang(0,0,90),
+    ang(0,0,0),
+    ang(0,0,90),
+    ang(0,0,90),
+    ang(0,0,0)
+)
+Segnum = table(#the bool table for the indivisual segment of each number
+    array(#[0]#
+        1,1,1,1,1,1,0
+    ),
+    array(#[1]#
+        0,1,1,0,0,0,0
+    ),
+    array(#[2]#
+        1,1,0,1,1,0,1
+    ),
+    array(#[3]#
+        1,1,1,1,0,0,1
+    ),
+    array(#[4]#
+        0,1,1,0,0,1,1
+    ),
+    array(#[5]#
+        1,0,1,1,0,1,1
+    ),
+    array(#[6]#
+        1,0,1,1,1,1,1
+    ),
+    array(#[7]#
+        1,1,1,0,0,1,0
+    ),
+    array(#[8]#
+        1,1,1,1,1,1,1
+    ),
+    array(#[9]#
+        1,1,1,1,0,1,1
+    )
+
+)
+Segcolor = vec4(hsv2rgb(Counter,255/255,255/255))+vec4(0,0,0,255)#the color of all the segments (rotating hue)
+
+#-----------------------function
+#getdigit:get the indivisual number from any digit in any interger
+#Input:number = the number is going to extract
+#Digit:number = the digit of the extraction
+#return:number = the number in whatever the Digit
+
+function number getdigit(Input,Digit){
+    return floor(Input%10^Digit/10^(Digit-1))
+}
+#hourintimezone:get the hour in any timezone
+#Timezone:number = the timezone of the time is going to convert
+#return:number = the hour in whatever the timezone 
+
+function number hourintimezone(Timezone){
+    return (time("hour")+Timezone)%24
+}
+#segcreate:create 8 7segment displays on the top of the chips
+
+function segcreate(){
+    for(Digit=0,5){
+        for(Seg=1,7){
+            holoCreate(
+#[index]#       Digit*10+Seg,
+#[position]#    Chippos+Shift+vec(0,Digit*35,0)+Segpos[Seg,vector],
+#[size]#        vec(1,1,1),
+#[angle]#       Segang[Seg,angle],
+#[color]#       vec4(0,0,0,255),
+#[model]#       "models/segment.mdl"
+            )
+            
+            holoParent(
+            Digit*10+Seg,
+            entity()
+            )
+            
+#            concmd(toString(Digit*10+Seg))
+        }
+    }
+}
+#segnumber:change the number of the 7segment in any digit
+#Number:number = the number is going to change (0~9)
+#Digit:number = the digit is going to change (0~5)
+function segnumber(Number,Digit){
+    for(Seg=1,7){
+        holoColor(Digit*10+Seg,#[index]#
+        Segcolor*Segnum[Number+1,array][Seg,number])#[color/on&off]#
+        
+#        holoShadow(Digit*10+Seg,#[index]#
+#        Segnum[Number+1,array][Seg,number])
+        
+#        concmd(toString(Digit*10+Seg))
+    }
+}
+#fillzero:if the length of the number is lower than the digit,
+#then fill the front of the number with zeros, otherwise return the original number
+#Number:number = the number is going to fill
+#Digit:number = the digit will fill to
+
+function string fillzero(Number,Digit){
+    Zeros = ""
+    String = toString(Number)
+    
+    if(String:length() < Digit){
+        for(I=1,Digit - String:length()){
+            Zeros = Zeros + "0"
+        }
+    }
+    return Zeros+String
+}
+#-----------------------post-function
+Time = fillzero(hourintimezone(+8),2) + fillzero(time("min"),2) + fillzero(time("sec"),2)
+
+#-----------------------main
+interval(500)
+
+if(first()){#create the 7seg at start up
+    segcreate()
+}
+
+#print(Time+" "+getdigit(Time:toNumber(),1))
+
+for(I=0,5){#update the time to 7seg
+    segnumber(getdigit(Time:toNumber(),I+1),I)
+}
+
+Counter++
+
+
+

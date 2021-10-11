@@ -1,0 +1,12 @@
+@name jukebox on demand
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#todo:
+#make a chat command lib
+#check distants with make a order
+#make a queue of musics url
+#make it log players musics
+#

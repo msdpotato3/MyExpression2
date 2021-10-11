@@ -1,0 +1,273 @@
+@name motionlib
+@persist  #testing code
+@persist MotionRec:table #recordMotion
+@persist LoadedFileData:table #loadFile
+@persist
+#single hashtag means comment or tempoary disable
+##double hashtags means deprecated or testing purpose (shouldn't be turn on!!)
+
+#================
+#is using globle variable: MotionRec:table
+#input: RecordPos , RecordAng , Filename , Step(per second) , Rounding
+
+function recordMotion(RecordPos:vector , RecordAng:angle , Filename:string , Step:number, Rounding:number){
+
+##    #(deprecated, use Filename instead) Filenamehash is use for temporary name of the stored data 
+##    local Filenamehash = hash(Filename + "_record")
+    
+    
+#if start recording
+    #if the function is running for the first time (timer not clicking)
+    if(clk(Filename + "_record") == 0){
+        #notify when start recording
+        print("=====start recording====="+"\n"+"Filename: "+Filename)
+        #setting up the table/clear the table
+        MotionRec[Filename,table] = table()
+        #record the metadata
+        MotionRec[Filename,table]["metadata",array] = array(Step)#initalize table
+    }
+    
+#recording
+    #set the timer for recording #timer name: Filename + "_record"
+    timer(Filename + "_record" , 1000/Step)
+    #when timer is clicking
+    if( clk(Filename + "_record") ){
+        #push the array of rounded pos & angle into table
+        MotionRec[Filename,table]:pushArray(array(round(RecordPos,Rounding),round(RecordAng,Rounding)))
+
+##        print("--------------------")#testing   
+##        print(hash(Filename + "_record"))
+##        printTable(MotionRec[Filename,table])
+
+    }
+    
+    
+#[
+        file structrue:
+        
+     MotionRec --+ #root
+                 |
+     #Filename_1 +--+ "metadata" = array(    Step    ) #metadata
+                 |  |
+                 |  + 1 = array(    RecordPos , RecordAng   ) #position and angle data
+                 |  |
+                 |  + 2 = array(    RecordPos , RecordAng   ) #position and angle data
+                 |  |
+                 |  + ... = array(  RecordPos , RecordAng   )
+                 |  
+     #Filename_2 +--+ "metadata" = array(    Step    ) #metadata
+                 |  |
+                 |  + 1 = array(    RecordPos , RecordAng   ) #position and angle data
+                 |  |
+                 |  + 2 = array(    RecordPos , RecordAng   ) #position and angle data
+                 |  |
+                 |  + ... = array(  RecordPos , RecordAng   )
+                 |  
+                 ...
+
+]#
+
+}
+
+#----------------
+#is using globle variable: MotionRec:table
+#containing trigger: runOnFile(1)
+
+function stopRecordMotion(Filename:string){
+##    #(deprecated, use Filename instead) Filenamehash is use for temporary name of the stored data 
+##    local Filenamehash = hash(Filename + "_record")
+    #trigger when file is clicking
+    runOnFile(1)
+    
+    #stop the timer for recording
+    stoptimer(Filename + "_record")
+    
+    ##if the function is running for the first time (file not clicking)
+#    if( fileClk(Filename + ".json") == 0 ){
+    if( fileClk(Filename) == 0 ){
+        
+        ##notify when stop recording
+        print("==========stoped==========")
+        
+        #save the file into "Filename.json"
+#        fileWrite( Filename + ".json" , tableToJson(MotionRec[Filename,table]) )
+        fileWrite( Filename , tableToJson(MotionRec[Filename,table]) )
+
+##        printTable(MotionRec[Filenamehash,table])
+##        fileLoad(Filename+".json")
+
+    }
+    
+##    if(fileLoaded()){
+##        print("File is loaded!")
+##        soundPlay("fileloaded",1,"garrysmod/save_load2.wav")
+##    }
+}
+
+
+#----------------
+#is using globle variable: LoadedFileData:table
+#containing trigger: runOnFile(1)
+
+#todo: 
+#add thing into array ( first() )
+#make a queue for loading (array)
+#check fileCanLoad()
+#load the first thing in the array 
+#delete the first thing after loading finished
+#repeat until no more thing need to load
+
+
+
+function void loadFile(Filename:string){
+
+    #trigger when file is clicking
+    runOnFile(1)
+##    #check the existence of the file 
+##    if( LoadedFileData:exists(Filename) ){
+##        #check the hash of the file 
+##        
+##        #if(LoadedFileData[Filename,table]["Hash",number]){
+##            
+##        #}        
+##    }
+    #if the function is running for the first time (file dont click) 
+    #(not safe! might collide with other fileclk!!!)
+    if( fileClk(Filename) == 0 ){
+        fileLoad(Filename)
+    }
+    
+    #is the loaded filename same as the file that is going to load
+    if( fileName() == Filename ){
+        #the pulse when file is loaded
+        if( changed(fileLoaded()) & fileLoaded() ){
+            #convert raw json into table
+            LoadedFileData[Filename,table] = jsonToTable(fileRead())
+            #notify when file is loaded
+            print(Filename+" is loaded!")
+##            #record the hash of the raw json file
+##            LoadedFileData[Filename,table]["Hash",number] = hash(fileRead())
+            
+            ##print(Filename + ": File is loaded!")
+        }
+    }
+
+#[
+            file structrue:
+            
+    LoadedFileData --+ #root
+                     |
+         #Filename_1 +--+ "metadata" = array(    Step    ) #metadata
+                     |  |
+                     |  + 1 = array(    RecordPos , RecordAng   ) #position and angle data
+                     |  |
+                     |  + 2 = array(    RecordPos , RecordAng   ) #position and angle data
+                     |  |
+                     |  + ... = array(  RecordPos , RecordAng   )
+                     |  
+         #Filename_2 +--+ "metadata" = array(    Step    ) #metadata
+                     |  |
+                     |  + 1 = array(    RecordPos , RecordAng   ) #position and angle data
+                     |  |
+                     |  + 2 = array(    RecordPos , RecordAng   ) #position and angle data
+                     |  |
+                     |  + ... = array(  RecordPos , RecordAng   )
+                     |  
+                     ...
+
+]#
+
+}
+
+
+#----------------
+#input: Rate(playback speed,default = 1) , Offset , Filename , PosInterpolationType , AngInterpolationType
+#containing trigger: runOnTick(1), runOnFile(1)
+#InterpolationType: default:none , "linear", "cosin", "cubic"
+
+function array readMotion(Rate:number , Offset:number , Filename:string , PosInterpolationType:string , AngInterpolationType:string){
+
+    runOnTick(1)
+    runOnFile(1)
+    
+    #interpolation
+    
+    
+    #load motionfile
+    
+    #check the existence of the file
+    if( LoadedFileData:exists(Filename) ){
+        #read motion
+        
+        
+    }
+    #if file doesn't exist
+    else{
+        print("File is not exist!, Maybe haven't loaded yet.")
+    }
+    
+}
+#----------------
+
+
+function void stopReadMotion(Filename:string){
+    
+}
+
+
+#================ testing code
+interval(500)
+
+
+Loadfile1 = "test.json"
+Loadfile2 = "test2.json"
+
+Filename1 = "test2.json"
+
+
+
+if(first()|duped()){
+    print("==========start==========")
+}
+
+
+##print(getTimers())
+
+#start recording
+if(changed(owner():keyPressed("o")) & owner():keyPressed("o")|clk(Filename1 + "_record")){    
+    #input: RecordPos , RecordAng , Filename , Step(per second) , Rounding
+    recordMotion(owner():pos() , owner():eyeAngles() , Filename1 , 4 , 2)
+}
+
+#stop recording
+if(changed(owner():keyPressed("p")) & owner():keyPressed("p")|fileClk(Filename1+".json")){
+    stopRecordMotion(Filename1)
+##    stoptimer(Filename1 + "_record")
+##    print("----stop----")
+    printTable(MotionRec[Filename1,table])
+}
+
+#read motion 
+if(changed(owner():keyPressed("l")) & owner():keyPressed("l")){ 
+
+     printTable( LoadedFileData[Filename1,table] )
+}
+
+##print( systime() )
+
+##print("cycle ended")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,163 @@
+@name command set
+@persist Cmdset:table
+
+
+
+#[
+    structrue:
+    
+    @Cmdset
+    |   
+    +---@function"aa"
+    |   +---@1  #variant 1
+    |   |   +---@desc
+    |   |   |   =   "description of aa(void)"
+    |   |   |
+    |   |   +---@takeandreturn
+    |   |       =   "void ; void"  #take1 , take2 ; return
+    |   |    
+    |   +---@2  #variant 2
+    |       +---@desc
+    |       |   =   "description of aa(number)"
+    |       |
+    |       +---@takeandreturn
+    |           =   "VarName:number ; void"
+    |        
+    +---@function"ab"
+    |   +---@1
+    |   |   +---@desc
+    |   |   |   =   "description of aa(void)"
+    |   |   |
+    |   |   +---@takeandreturn
+    |   |       =   "void ; void"
+    |   |
+    |   ...
+    |
+    ...
+
+]#
+
+
+
+#todo:
+#"help" command
+    #print command variant count and "desc" and "takeandreturn"
+
+#""
+
+#------------------------
+#[
+#discarded
+#todo: move this function to some utilty lib
+
+#Cmdset["test",table] [1,table] ["desc",string]
+#check table existence
+function createSubTable(SubTable:string){
+    
+    #check syntax error
+#    if(){
+        #get Table name #eg. "Cmdset" in Cmdset["test",table] [1,table] ["desc",string]
+        local Tablename = SubTable:left( SubTable:find("[") - 1 )
+
+        #get a Array of things serparate by space
+        local CreateArray = SubTable:sub( SubTable:find("[") ):explode(" ")
+        print(CreateArray)
+    
+
+
+        foreach (Key,Value:string = CreateArray){
+            #get rids of []
+            CreateArray[Key,string] = Value:replaceRE(Pattern, New)
+            print(CreateArray)
+        }
+        
+        
+#    }
+    #syntax error
+#    else{
+        
+#    }
+}
+]#
+#------------------------
+##command
+if(first()){
+#------------------------
+    #add test() into Cmdset
+    Cmdset = Cmdset:add( table("test"=table()) )
+    Cmdset["test",table]:pushTable(
+        table(
+            #description of test()
+            "desc"="description of test(void)",
+            #takeandreturn of test()
+            "takeandreturn"="void;void"
+        )
+    )
+        
+    function test(){
+        print("This is a test command, Check command_set for more information.")
+    }
+    
+#------------------------
+
+    #add help() into Cmdset
+    Cmdset = Cmdset:add( table("help"=table()) )
+    Cmdset["help",table]:pushTable(
+        table(
+            #description of help()
+            "desc"="print command variant count and desc and takeandreturn.",
+            #takeandreturn of help()
+            "takeandreturn"="CmdName:string , CmdVariant:number ; void"
+        )
+    )
+
+    function help( CmdName:string , CmdVariant:number ){
+
+        #check command existence
+        if( Cmdset:exists(CmdName) ){
+
+            #get command variant
+            local Variantcount = Cmdset[CmdName,table]:count()
+
+            #get command desc
+            local Cmddesc = Cmdset[CmdName,table][CmdVariant,table]["desc",string] 
+
+            #get command takeandreturn
+            local Cmdtakeandreturn = Cmdset[CmdName,table][CmdVariant,table]["takeandreturn",string] 
+
+            #print command information
+            print( 
+                "\n" +
+                "help: " + "\n" + 
+                "\"" + CmdName + "\" has " + Variantcount +" variant(s)" + "\n" + 
+                "description:  " + Cmddesc + "\n" +
+                "takeandreturn:  " + Cmdtakeandreturn
+            )
+
+        }
+        #command doesn't exist
+        else{
+            print("help: no such command")
+        }
+
+    }
+
+#------------------------
+
+
+#------------------------
+
+}
+##endcommand
+
+#==========test code
+#runOnUse(1)
+
+
+#printTable(Cmdset)
+#help("test",1)
+
+
+
+
+

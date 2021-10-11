@@ -1,0 +1,24 @@
+@name getdigit
+ 
+function number getdigit(Input,Digit){ 
+    return floor(Input%10^Digit/10^(Digit-1))
+}
+
+print(getdigit(654321,1))
+
+#[
+Input=1234 Digit=2 Answer=3
+1234%100=34
+= 1234%10^2=34
+= Input%10^Digit
+-----------------
+34/10^(2-1)=3.4
+= 34/10^(Digit-1)=3.4
+floor(3.4)=3
+
+floor(Input%10^Digit/10^(Digit-1))
+
+
+X^0=1
+]#
+

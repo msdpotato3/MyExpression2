@@ -1,0 +1,10 @@
+@name teleporting chair for warp point
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#todo:
+#make a chat command lib
+#spawn and teleport chair when chat commanded
+#then teleport the chair to warp point

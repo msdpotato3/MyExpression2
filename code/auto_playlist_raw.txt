@@ -1,0 +1,174 @@
+@name auto playlist
+@inputs PreviousI NextI PauseI Radio:wirelink
+@outputs Song PauseInternal
+@persist  PlayList:array Data:string [PauseInternal PreviousI NextI Song Pulse EndIR PulseH PlayIR PauseIR PauseI StoppedIR PlayO PauseO]:number
+@trigger all
+#[
+=========Credit================================
+create by mashed_potato_3
+welcome to my profile: https://steamcommunity.com/id/mashed_potato_3
+thanks to Super Courier for helpping me debugging :)
+improved by 
+my profile:*not necessary
+changelog:
+=========Manual================================
+PLEASE READ THIS BEFORE YOU DO ANY CHANGES!!
+THIS IS A EXPRESSION2 CHIP CAN AUTOMATICALLY PLAY SONGS IN YOUR OWN PLAYLIST USING 3D STREAM RADIO
+and here is how you do it
+step 1, if you using LocalPlaylist, skip to step 2. first you find a website can host text as raw text
+in here I'm using pastebin.com
+step 2, create your own playlist using this format
+the playlist format:
+
+[replace by your music url][enter]
+[replace by your music url][enter]
+...
+[replace by your music url][enter]
+[replace by your music url]
+
+one playlist can contains a lot of songs
+(actually you can put 1048576 songs in the playlist
+because arrays are limited to 1048576 elements by default)
+and there MUST HAVE A ENTER BETWEEN THOSE URLS
+and if you using LocalPlaylist, skip to step 5.
+step 3, upload your own playlist to the website 
+step 4, copy your playlist url as raw text 
+step 5, paste it to this chip and remember to add double quote 
+and voila you can enjoy your music now :)
+====if error happened===========================
+if you don't have http function and you are admin
+press f1 in the game Utilities -> Admin -> E2 Extensions -> and check the http option
+or type "wire_expression2_extension_enable http" in the console to enable it
+if you're in a server and you're not admin
+just ask the admin to turn that on
+if he/she refused 
+well, too bad you can't use online playlist :/ but!
+you can use localplaylist though
+and before you use localplaylist you need to comment-fy these line (comment-fy???)
+#[<--- anything between these thing is a comment --->]#    
+#[you need to comment-fy those line are written Localplaylist only before you using localplaylist
+==to user&reupload rules========================
+I'm newbie to the programming so the code might be inefficient sloppy and have some bugs
+and feel free to improve those code 
+if you do make some improvement to the code 
+feel free to upload to workshop
+just credit yourself and credit me at the credit section on the top
+and write down what did you changed at the changelog
+
+and have fun :)
+========variables===============================
+you need three buttons/three keybind in order to work
+'-I' are suppose to connect to the buttons
+'-IK' are suppose to be keybind
+'EndIR' and '-IR' is the signal from the radio
+all output are suppose to connect to the radio except for 'Song'
+'Song' is not connected to anywhere it is only for debugging purpose
+------------------------------------------------
+'-I' = input from the button
+'-IR' = input from the radio
+'-IK' = input from keyboard
+'-O' = output to the radio
+'Song' is not connected to anywhere it is only for debugging purpose
+=======connections==============================
+this chip:Radio[WIRELINK]--> your radio:Create Wirelink[WIRELINK]/wirelink[WIRELINK]
+this chip:PauseI -->Pause button
+this chip:PlayI -->Play button
+this chip:PreviousI -->PreviousI button
+=========Settings===============================
+if you don't want to fill it
+you still need two double quote behind the settings
+---------Keybind--------------------------------
+you can use physical buttons or use keybind at the same time
+List of keys here: https://wiki.facepunch.com/gmod/Enums/KEY
+and don't write "KEY_" for example instead of "KEY_A" you write "A" ]#
+PauseIK = ""
+NextIK = ""
+PreviousIK = ""
+#[-------Playlist-------------------------------
+change your local playlist here
+if you want to use online playlist just dont fill it
+format is same as online AND YES FILL THE ENTIRE LIST IN HERE]#
+LocalPlaylist = ""
+#change your online playlist here
+PlayListUrl = "https://pastebin.com/raw/6Utnx3i5"
+#========Code===================================
+PlayIR = Radio["Play",number]
+PauseIR = Radio["Paused",number]
+StoppedIR = Radio["Stopped",number]
+EndIR = Radio["Ended",number]
+
+#get the list
+if(first()){
+    if(LocalPlaylist != ""){
+        Data = LocalPlaylist
+        PlayO = 1,PauseO = 0
+    }
+# <--- add "[" behind the hashtag to be LocalPlaylist only
+
+    else{
+    httpRequest(PlayListUrl)
+    }
+#  add "]" in front of the hashtag to be LocalPlaylist only ---> #
+
+    Song = 1
+}
+# <--- add "[" behind the hashtag to be LocalPlaylist only
+
+#write the list
+if(changed(httpSuccess())&httpSuccess()){
+    Data = httpData()
+    PlayO = 1,PauseO = 0
+}
+#  add "]" behind the hashtag to be LocalPlaylist only ---> #
+
+#seperate the list into array
+PlayList = Data:explode("\n")
+
+#refresh status if PauseI changed 
+#PauseO = (PauseO != PauseI ? PauseI : PauseI )
+PauseInternal = (changed(PauseI == 1)&PauseI == 1|changed(owner():keyPressed(PauseIK))&owner():keyPressed(PauseIK) ? !PauseInternal : PauseInternal)
+if(PauseIR != PauseInternal){
+    timer("PauseO",1)
+    PauseO = (clk("PauseO") ? PauseInternal :PauseO)
+    #print(ceil(systime(),5)+"|refresh")
+}
+#control the song
+#play next song in the list when the song ended
+if(changed(EndIR == 1)&EndIR == 1){
+    if(Song + 1 > PlayList:count()){
+# <--- add "[" behind the hashtag to be LocalPlaylist only        
+        httpRequest(PlayListUrl)
+#  add "]" in front of the hashtag to be LocalPlaylist only ---> #        
+        Song = 1
+    }
+    else{
+        Song++
+    }
+#    Song = (Song + 1 > PlayList:count() ? 1 : Song+1)   
+#    print(ceil(systime(),5)+"|ended")
+#    httpRequest(PlayListUrl)
+}
+#play next song in the list
+if(changed(NextI == 1)&NextI == 0|changed(owner():keyPressed(NextIK)) & owner():keyPressed(NextIK)){
+    if(Song + 1 > PlayList:count()){
+# <--- add "[" behind the hashtag to be LocalPlaylist only        
+        httpRequest(PlayListUrl)
+#  add "]" in front of the hashtag to be LocalPlaylist only ---> #        
+        Song = 1
+    }
+    else{
+        Song++
+    }
+#    Song = (Song + 1 > PlayList:count() ? 1 : Song+1)
+#    print(ceil(systime(),5)+"|next")
+}
+#play previous song in the list
+if(changed(PreviousI == 1)&PreviousI == 1|changed(owner():keyPressed(PreviousIK))&owner():keyPressed(PreviousIK)){
+    Song = (Song - 1 <= 0 ? PlayList:count() : Song-1)
+    #print(ceil(systime(),5)+"|previous")
+}
+#update the Radio
+Radio["Play",number] = 1
+Radio["Pause",number] = PauseO
+Radio["Stream URL",string] = PlayList[Song,string]
+runOnTick(1)

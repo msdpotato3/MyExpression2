@@ -1,0 +1,211 @@
+@name EgpDataVisualizerLib
+@inputs #Egp:wirelink
+@persist #Time Chartdata1:array
+
+
+#[--------
+Egp,Name,Description,BarLup,BarRdown
+egpbarcreate()
+
+Egp,Name,Vaule,BarLup,BarRdown
+egpbarupdate()
+
+Array,Input,Historylength
+recordDatatoarray()
+
+Egp,Name,Description,ChartLup,ChartRdown,ChartHGridsubdivide,MaxValue,MinValue,Historylength
+egpchartcreate()
+
+Egp,Name,Array,ChartLup,ChartRdown,MaxValue,MinValue,Color,Historylength
+egpdrawgraph()
+
+
+#--------
+]#
+#Egp,Name,Description,BarLup,BarRdown
+#use 4 indexes
+function egpbarcreate(Egp:wirelink,Name:string,Description:string,BarLup:vector2,BarRdown:vector2){
+    #4index total
+#    Egp:egpClear()#clear the egp 
+    Hashname = hash(Name)/10000000
+    Barbasepos = BarRdown - BarLup
+    
+    Egp:egpBox(Hashname+1,BarLup+Barbasepos/2,Barbasepos)#bar
+    
+    Egp:egpBoxOutline(Hashname+2,BarLup+Barbasepos/2,Barbasepos+vec2(10,10))#border
+    
+    Egp:egpText(Hashname+3,"Starting...",BarRdown-vec2(BarRdown:x()-BarLup:x(),-10)/2)#number
+    Egp:egpText(Hashname+4,Description,BarRdown-vec2(BarRdown:x()-BarLup:x(),-40)/2)#bars
+
+    Egp:egpFont(Hashname+3,"consolas",20)
+    Egp:egpFont(Hashname+4,"consolas",20)
+    
+    Egp:egpAlign(Hashname+3,1)
+    Egp:egpAlign(Hashname+4,1)
+    
+    Egp:egpColor(Hashname+1,vec(0,0,0))    
+    Egp:egpColor(Hashname+2,vec(0,0,0))    
+    Egp:egpColor(Hashname+3,vec(0,0,0))
+    Egp:egpColor(Hashname+4,vec(0,0,0))
+    
+#    print(hash(Name)/10000000)
+}
+
+
+function egpbarupdate(Egp:wirelink,Name:string,Vaule:number,BarLup:vector2,BarRdown:vector2){
+    Hashname = hash(Name)/10000000
+    BarLup = vec2(BarLup:x(),BarRdown:y()-clamp(Vaule,1,BarRdown:y()-BarLup:y()))
+    Barbasepos = BarRdown - BarLup
+    
+    Egp:egpSize(Hashname+1,Barbasepos)
+    Egp:egpPos(Hashname+1,BarLup+Barbasepos/2)
+
+    Egp:egpSetText(Hashname+3,round(Vaule,2):toString())
+}
+
+
+#Array,Input,Historylength
+function array recordDatatoarray(Array:array,Input:number,Historylength:number){
+    if(Array:count() < Historylength){
+        Array:insertNumber(1,Input)
+    }
+    else{
+        Array:insertNumber(1,Input)
+        Array:pop()
+    }
+    return Array
+}
+
+
+#Egp,Name,Description,ChartLup,ChartRdown,ChartHGridsubdivide,MaxValue,MinValue,Historylength
+#use 6 indexes
+function egpchartcreate(Egp:wirelink,Name:string,Description:string,ChartLup:vector2,ChartRdown:vector2,ChartHGridsubdivide:number,MaxValue:number,MinValue:number,Historylength:number){
+    Hashname = hash(Name)/10000000
+    Chartbasepos = ChartRdown - ChartLup
+    
+    #outline
+    Egp:egpBoxOutline(Hashname+1,ChartLup+Chartbasepos/2,Chartbasepos+vec2(3,3))
+    Egp:egpColor(Hashname+1,vec4(255,255,255,255))
+    Egp:egpSize(Hashname+1,3)
+    
+    #Horizontal line
+    HStep = (ChartRdown:y() - ChartLup:y())/(ChartHGridsubdivide+1)
+    Horizontalline = array()
+    for(I = 1,ChartHGridsubdivide){
+        Horizontalline:pushVector2(vec2(ChartLup:x()    ,ChartLup:y()+HStep*I ))
+        Horizontalline:pushVector2(vec2(ChartRdown:x()  ,ChartLup:y()+HStep*I ))
+        Horizontalline:pushVector2(vec2(ChartLup:x()    ,ChartLup:y()+HStep*I ))
+        Horizontalline:pushVector2(vec2(ChartLup:x()    ,ChartLup:y()+HStep*(I+1) ))
+    }
+#    print(ChartLup:toString()+"|"+ChartRdown:toString())
+#    print(Horizontalline)
+    Egp:egpLineStrip(Hashname+2,Horizontalline)
+    
+    #vertical line
+    VStep = (ChartRdown:x() - ChartLup:x())/(Historylength/5+1)
+    Verticalline = array()
+    for(I = 1,Historylength/5){
+        Verticalline:pushVector2(vec2( ChartLup:x()+VStep*I,ChartLup:y() ))
+        Verticalline:pushVector2(vec2( ChartLup:x()+VStep*I,ChartRdown:y() ))
+        Verticalline:pushVector2(vec2( ChartLup:x()+VStep*I,ChartLup:y() ))
+        Verticalline:pushVector2(vec2( ChartLup:x()+VStep*(I+1),ChartLup:y() ))
+    } 
+#    print(ChartLup:toString()+"|"+ChartRdown:toString())
+#    print(Verticalline)
+    Egp:egpLineStrip(Hashname+3,Verticalline)
+    
+    #lable for maximum
+    Egp:egpText(Hashname+4,MaxValue:toString(),vec2(ChartLup:x() - 3,ChartLup:y() - 10 ))
+    Egp:egpAlign(Hashname+4,2)
+    
+    #lable for minimum    
+    Egp:egpText(Hashname+5,MinValue:toString(),vec2(ChartLup:x() - 3,ChartRdown:y() - 10 ))
+    Egp:egpAlign(Hashname+5,2)
+
+    #lable for description
+    Egp:egpText(Hashname+6,Description,vec2(ChartLup:x() + (ChartRdown:x() - ChartLup:x())/2,ChartRdown:y() ))
+    Egp:egpAlign(Hashname+6,1)
+    Egp:egpFont(Hashname+6,"consolas",20)
+#    #lable for value
+#    Egp:egpText(Hashname+7,"12.34",vec2(ChartRdown:x() + 2,ChartRdown:y() - 10 ))
+#    Egp:egpAlign(Hashname+7,0)
+    
+
+    
+
+    
+}
+
+#Egp,Name,Array,ChartLup,ChartRdown,MaxValue,MinValue,Color,Historylength
+function egpdrawgraph(Egp:wirelink,Name:string,Inputarray:array,ChartLup:vector2,ChartRdown:vector2,MaxValue:number,MinValue:number,Color:vector4,Historylength:number){
+    Hashname = hash(Name)/10000000
+    TimeStep = (ChartRdown:x() - ChartLup:x())/(Historylength+1)
+    Graph = array()
+    
+#[    for(I = 1,Historylength){
+        Graph:pushVector2(ChartRdown - vec2(
+                (clamp(Inputarray[I,number],MinValue,MaxValue)-MinValue) * (ChartRdown:y()-ChartLup:y()/(MaxValue-MinValue)),
+                I-1
+            )
+        )
+    }]#
+    
+    for(I = 1,Historylength+2){
+        Graph:pushVector2(ChartRdown-vec2( (I-1)*TimeStep ,#x
+             (clamp(Inputarray[I,number],MinValue,MaxValue)  - MinValue) * ((ChartRdown:y()) - ChartLup:y()) / (MaxValue - MinValue)  )#y
+        )
+    }
+    
+    
+    
+#    print(ChartLup:toString()+"|"+ChartRdown:toString())
+#    print(Graph) 
+    Egp:egpLineStrip(Hashname+1,Graph)
+    Egp:egpColor(Hashname+1,Color)
+}
+
+runOnUse(1)
+#--------
+#[
+interval(1)
+
+
+BarLeftUpcorner = vec2(120,120*5)
+BarRightDowncorner = vec2(120,120*5)+vec2(30,200)
+ChartLeftUpcorner = vec2(120*2,120*5)
+ChartRightDowncorner = vec2(120*2,120*5)+vec2(250,200)
+ChartHGridsubdivide = 200/10
+#ChartVGridsubdivide = 150/5
+ChartMaxValue = 150
+ChartMinValue = 10
+ChartHistoryLength = 30
+
+#--------main
+
+if(first()|useClk()){
+    Egp:egpClear()
+    
+    #Egp,Name,Description,BarLup,BarRdown
+    egpbarcreate(Egp,"bar1","bar1a",BarLeftUpcorner,BarRightDowncorner)
+    
+    #Egp,Name,Description,ChartLup,ChartRdown,MaxValue,MinValue,Historylength
+    egpchartcreate(Egp,"Chart1","Chart1a",ChartLeftUpcorner,ChartRightDowncorner,ChartHGridsubdivide,ChartMaxValue,ChartMinValue,ChartHistoryLength)
+    timer("Chart1",1000)
+}
+
+#Egp,Name,Vaule,BarLup,BarRdown
+egpbarupdate(Egp,"bar1",sin(Time*5)*100+100,BarLeftUpcorner,BarRightDowncorner)
+
+
+if(clk("Chart1")){
+    #Array,Input,Historylength
+    recordDatatoarray(Chartdata1,sin(Time)*(140/2)+(140/2)+10,100)
+    
+    #Egp,Name,Array,ChartLup,ChartRdown,Color,Historylength
+    egpdrawgraph(Egp,"graph1",Chartdata1,ChartLeftUpcorner,ChartRightDowncorner,ChartMaxValue,ChartMinValue,vec4(0,255,0,255),ChartHistoryLength)
+    timer("Chart1",1)
+}
+
+Time++
+
+]#
