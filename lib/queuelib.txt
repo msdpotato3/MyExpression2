@@ -1,0 +1,17 @@
+@name queuelib
+@persist QueueList 
+@persist 
+
+#todo:
+#create queue
+#delete queue
+#clear queue
+#move pointer to next object
+#move pointer to last object
+#move pointer to index
+#get queue object
+#pop queue object
+#delete queue object
+#add object at index
+#add object at last
+#
