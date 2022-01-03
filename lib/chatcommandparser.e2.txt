@@ -1,0 +1,8 @@
+@name ChatCommandparser
+@persist
+@persist
+@persist
+
+#todo:
+#make a function that input last chat
+#and output a table of command and it's argument
