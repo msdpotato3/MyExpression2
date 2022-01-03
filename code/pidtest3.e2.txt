@@ -2,7 +2,7 @@
 @inputs ObjHeight Egp:wirelink  
 @outputs Thrust Hundred Fifity AvgSumError IError
 @persist [DesireGraph,ObjHeightGraph,ErrorGraph,PGraph,IGraph,DGraph]:array SumError IError Timerdelay Timerswitch AvgSumError LastError BaseHeight DesireHeight P I D Hundred Fifity PastErrors:array
-#include "repository/lib/egpdatavisualizerlib"
+#include "repository/lib/egpdatavisualizerlib.e2"
 
 interval(100)
 BaseHeight = entity():pos():x()
@@ -19,7 +19,9 @@ function number locPIDCalc(SetPoint , Nextpoint){
     PastErrors:insertNumber(1,IError)
 #    SumError += IError
     
-    AvgSumError = PastErrors:sum()/20
+#    AvgSumError = PastErrors:sum()/20
+    AvgSumError = PastErrors:sum()
+    
     
     DError = IError - LastError
     
