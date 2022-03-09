@@ -1,0 +1,353 @@
+@name holo fin pitch
+@inputs [Fin1 Fin2 Rotor]:entity
+@outputs Pitch
+@persist Pitch
+
+@autoupdate
+@strict
+
+##### Settings #####
+FinCount = 2
+local Model = "models/sprops/misc/axis_plane.mdl"
+
+local AngMask = ang(1, 0, 0)
+
+#local Axis1 =
+#local Axis2 =
+
+####################
+
+##### click #####
+runOnUse(1)
+#runOnLast(1)
+runOnTick(1)
+##### function #####
+
+#NOTE: this is a rewrite of the original code
+#NOTE: i write it into a function so i can better intergrate this into other stuff
+function createHoloFinController() {
+    
+    #=====check entity connection=====#
+    #here i used the guard clause techniques
+    
+    #if not fully connected
+    if( !(->Fin1 & ->Fin2 & ->Rotor) ) {
+        #print the hash of the code (because of autoupdate)
+        print("hash: ", hash())
+        
+        #print error message
+        print(
+        "not all of the entities are connected!",
+        "\nFin1: "+ ->Fin1:toString() ,
+        "\nFin2: "+ ->Fin2:toString() ,
+        "\nRotor: "+->Rotor:toString() 
+        )
+        #stop the function being running
+        return        
+    }
+    
+    #=====start creating holo=====#
+    #NOTE: the idea of holo controlling Fin are: 
+    #NOTE: make holos that parent on the Rotor
+    #NOTE: set the init rotation of the holos
+    #NOTE: 
+    #NOTE: 
+    #NOTE: 
+     
+    
+    
+    #print the hash of the code (because of autoupdate)
+    print("hash: ", hash())
+    
+    print("all of the entities are connected!")
+    
+    #reset Pitch
+    Pitch = 0
+    
+    #unparent Fins
+    Fin1:deparent()
+    Fin2:deparent()
+    
+    #freeze Fins and Rotor
+    Fin1:propFreeze(1)
+    Fin2:propFreeze(1)
+    Rotor:propFreeze(1)
+
+
+
+
+    
+}
+
+#[function rotateFins(Pitch) {
+    holoAng(
+        1,
+        Fin1:angles():rotateAroundAxis(
+            Rotor:toWorld(vec(10,0,0)) - Rotor:pos(),
+            #Rotor:pos(),
+            Pitch
+        )
+    )
+
+    holoAng(
+        2,
+        Fin2:angles():rotateAroundAxis(
+            Rotor:toWorld(-vec(10,0,0)) - Rotor:pos(),
+            #Rotor:pos(),
+            Pitch
+        )
+    )
+}]#
+function rotateFins(Pitch, AngMask:angle) {
+#[    holoAng(
+        1,
+        ang(0,0,90):rotateAroundAxis(
+            Rotor:toWorld(vec(10,0,0)) - Rotor:pos(),
+            #Rotor:pos(),
+            Pitch
+        )
+    )
+
+    holoAng(
+        2,
+        ang(0,0,90):rotateAroundAxis(
+            Rotor:toWorld(-vec(10,0,0)) - Rotor:pos(),
+            #Rotor:pos(),
+            Pitch
+        )
+    )]#
+    
+    ## this part is hard coded!! 
+    ## might need rewrite
+    holoAng(
+        1,
+        Rotor:toWorld(Pitch * AngMask)
+    )
+
+    holoAng(
+        2,
+        Rotor:toWorld(-Pitch * AngMask) 
+    )
+}
+
+##### main #####
+if(dupefinished()|useClk()) {
+    reset()
+}
+
+
+if(first()|duped()){
+    #[
+    
+        Fin1->holoEntity(1)->Rotor
+        Fin2->holoEntity(2)->Rotor
+        
+    ]#
+    
+    
+    
+    print("hash: ", hash())
+    
+    #check entity connection
+    if(->Fin1 & ->Fin2 & ->Rotor){
+        print("all of the entities are connected!")
+        #print("first()")
+        
+        Pitch = 0
+        
+        #unparent Fins
+        Fin1:deparent()
+        Fin2:deparent()
+        Rotor:deparent()
+        
+        #unparent holos
+        #holoEntity(1):deparent()
+        #holoEntity(2):deparent()
+        
+        
+        #freeze Fins 
+        ## THIS SHIT HAVE FUCKING CD !!!!
+        Fin1:propFreeze(1)
+        Fin2:propFreeze(1)
+        Rotor:propFreeze(1)
+        
+        #delete holos
+        #holoDelete(1)
+        #holoDelete(2)
+        
+        #create holos
+        holoCreate( 1,Rotor:pos(), vec(1), Rotor:toWorld(ang(0, 0, 0)) )
+        holoCreate( 2,Rotor:pos(), vec(1), Rotor:toWorld(ang(0, 0, 0)) )
+        
+        #set holos model
+        holoModel(1,Model)
+        holoModel(2,Model)
+        
+        
+        #set Fin angle
+        local Ang1 = holoEntity(1):toWorld(ang(0,90,90))
+        local Ang2 = holoEntity(2):toWorld(ang(0,90,90))
+        
+        Fin1:setAng( Ang1 )
+        Fin2:setAng( Ang2 )
+        
+        
+        #set Fin pos
+        ## set pos need time to move!!
+        ## cant parent right away
+        
+        local Pos1 = holoEntity(1):toWorld(vec(0,15,0))
+        local Pos2 = holoEntity(2):toWorld(vec(0,-15,0))
+        
+        Fin1:setPos( Pos1 )
+        Fin2:setPos( Pos2 )
+        #print(holoEntity(1):toWorld(vec(0,20,0)))
+        
+        #parent holos onto Rotor
+        holoParent( 1, Rotor )
+        holoParent( 2, Rotor )
+        
+        #parent Fins onto holos
+        #Fin1:parentTo( holoEntity(1) )
+        #Fin2:parentTo( holoEntity(2) )
+        
+        #start the timer for the next part    
+        timer("init",300)
+    }
+    else{
+        print(
+            ".\nnot all of the entities are connected!"+
+            "\nFin1: "+ ->Fin1:toString() +
+            "\nFin2: "+ ->Fin2:toString() +
+            "\nRotor: "+->Rotor:toString() 
+        )    
+    }
+}
+if(clk("init")){
+
+    print("timer: init")
+    #parent Fins onto holos
+    Fin1:parentTo( holoEntity(1) )
+    Fin2:parentTo( holoEntity(2) )
+    
+    
+    #parent holos onto Rotor
+    #holoParent( 1, Rotor )1
+    #holoParent( 2, Rotor )
+    
+    
+
+    
+    #print( holoEntity(1):angles() )
+    
+    #local Ang1 = holoEntity(1):angles() + ang(0,0,0)
+    #local Ang2 = holoEntity(2):angles() + ang(0,0,0)
+    
+    #set Fin angle
+    #Fin1:setAng( Ang1 )
+    #Fin2:setAng( Ang2 )
+
+    
+    
+    #print("Fin2:setAng", holoEntity(2):angles())
+    
+    #print("Rotor angle", Rotor:angles())
+    
+    #parent holos onto Rotor
+    #holoParent( 1, Rotor )
+    #holoParent( 2, Rotor )
+    
+    #parent Fins onto holos
+    #Fin1:parentTo( holoEntity(1) )
+    #Fin2:parentTo( holoEntity(2) )
+    
+    #freeze Fins
+    #Fin1:propFreeze(1)
+    #Fin2:propFreeze(1)
+
+}
+
+if(owner():keyPressed("j")){
+    Pitch++
+    
+    Pitch = clamp(Pitch, 0, 90)
+    
+    rotateFins(Pitch, AngMask)
+    
+}
+elseif(owner():keyPressed("k")){
+    Pitch--
+    
+    Pitch = clamp(Pitch, 0, 90)
+    
+    rotateFins(Pitch, AngMask)
+
+}
+
+
+#[
+#test
+if( changed(owner():keyPressed("p")) & owner():keyPressed("p") ){
+    print("pressed P")
+    Fin1:deparent()
+    Fin1:setAng( holoEntity(1):angles() )
+    
+}
+]#
+
+#[if(last()){
+    #print("last()")
+    #unparent Fins
+    Fin1:deparent()
+    Fin2:deparent()
+    
+    
+    #freeze Fins
+    Fin1:propFreeze(1)
+    Fin2:propFreeze(1)
+    
+    #delete holos
+    holoDelete(1)
+    holoDelete(2)
+}]#
+
+
+
+
+
+
+#print(Pitch)
+
+#set Fin pitch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

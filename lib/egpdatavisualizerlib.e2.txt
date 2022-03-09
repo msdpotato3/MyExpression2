@@ -2,6 +2,8 @@
 @inputs #Egp:wirelink
 @persist #Time Chartdata1:array
 
+runOnUse(1)
+
 
 #[--------
 Egp,Name,Description,BarLup,BarRdown
@@ -20,12 +22,12 @@ Egp,Name,Array,ChartLup,ChartRdown,MaxValue,MinValue,Color,Historylength
 egpdrawgraph()
 
 
-#--------
 ]#
+#--------bar
 #Egp,Name,Description,BarLup,BarRdown
 #use 4 indexes
 function egpbarcreate(Egp:wirelink,Name:string,Description:string,BarLup:vector2,BarRdown:vector2){
-    #4index total
+    #4 index total
 #    Egp:egpClear()#clear the egp 
     Hashname = hash(Name)/10000000
     Barbasepos = BarRdown - BarLup
@@ -63,6 +65,11 @@ function egpbarupdate(Egp:wirelink,Name:string,Vaule:number,BarLup:vector2,BarRd
     Egp:egpSetText(Hashname+3,round(Vaule,2):toString())
 }
 
+
+
+
+
+#--------line chart
 
 #Array,Input,Historylength
 function array recordDatatoarray(Array:array,Input:number,Historylength:number){
@@ -129,12 +136,10 @@ function egpchartcreate(Egp:wirelink,Name:string,Description:string,ChartLup:vec
 #    #lable for value
 #    Egp:egpText(Hashname+7,"12.34",vec2(ChartRdown:x() + 2,ChartRdown:y() - 10 ))
 #    Egp:egpAlign(Hashname+7,0)
-    
-
-    
-
-    
+     
 }
+
+
 
 #Egp,Name,Array,ChartLup,ChartRdown,MaxValue,MinValue,Color,Historylength
 function egpdrawgraph(Egp:wirelink,Name:string,Inputarray:array,ChartLup:vector2,ChartRdown:vector2,MaxValue:number,MinValue:number,Color:vector4,Historylength:number){
@@ -155,17 +160,31 @@ function egpdrawgraph(Egp:wirelink,Name:string,Inputarray:array,ChartLup:vector2
              (clamp(Inputarray[I,number],MinValue,MaxValue)  - MinValue) * ((ChartRdown:y()) - ChartLup:y()) / (MaxValue - MinValue)  )#y
         )
     }
-    
-    
-    
+     
 #    print(ChartLup:toString()+"|"+ChartRdown:toString())
 #    print(Graph) 
     Egp:egpLineStrip(Hashname+1,Graph)
     Egp:egpColor(Hashname+1,Color)
 }
 
-runOnUse(1)
-#--------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--------var define
 #[
 interval(1)
 
