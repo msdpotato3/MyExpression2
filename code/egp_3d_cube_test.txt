@@ -1,0 +1,185 @@
+@name Egp 3d cube test
+
+@inputs #EGP:wirelink
+@outputs 
+
+@persist EGP:wirelink VTX:array ViewMtx:matrix4 ViewMtxOrder:array MatrixTable:table
+@persist Ang 
+
+## first clk
+if(first()) {
+    ##### clicks
+    runOnTick(1)
+    runOnChat(1)
+    
+    ##### function
+
+    ## return a 3D translating 4D matrix
+    function matrix4 transMatrix(Trans:vector) {
+        local T_X = Trans:x()
+        local T_Y = Trans:y()
+        local T_Z = Trans:z()
+
+        return matrix4(
+          1,   0,   0, T_X, 
+
+          0,   1,   0, T_Y, 
+
+          0,   0,   1, T_Z, 
+
+          0,   0,   0,   1
+        )
+    }
+
+    ## return a 3D scaling 4D matrix
+    function matrix4 scaleMatrix(Scale:vector) {
+        local Scl_X = Scale:x()
+        local Scl_Y = Scale:y()
+        local Scl_Z = Scale:z()
+
+        return matrix4(
+        Scl_X,     0,     0,     0,
+
+            0, Scl_Y,     0,     0,
+
+            0,     0, Scl_Z,     0,
+
+            0,     0,     0,     1
+        )
+    }
+
+    ## return a 3D rotation 4D matrix
+    function matrix4 rotateMatrix(Vec:vector, Angle) {
+        return matrix4(mRotation(Vec, Angle)):setElement(4, 4, 1)
+    }
+
+
+    ## calc the different matrices
+    function calcMatrix() {
+        ## calc the individual matrix
+        MatrixTable["ScalingMtx", matrix4] = scaleMatrix(vec(30))
+        #print(Ang)
+        MatrixTable["RotMtx", matrix4] = rotateMatrix(vec(1, 0, 1), Ang)
+
+        MatrixTable["TransMtx", matrix4] = transMatrix(vec(50, 50, 0))
+
+        MatrixTable["Ortho2DProjMtx", matrix4] = matrix4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
+        )
+    }
+
+    ## combine the different matrices into a single view matrix 
+    function matrix4 calcViewMatrix(MatrixTable:table, Order:array) {
+        ## first matrix
+        local ViewMatrix = MatrixTable[Order[1, string], matrix4]
+        
+        ## combine matrix
+        for(I = 2, Order:count()) {
+            ViewMatrix = MatrixTable[Order[I, string], matrix4] * ViewMatrix
+        }
+
+        return ViewMatrix
+    }
+
+    ## turn 3D vertices into 2D view vertices 
+    function array calcViewvertex(ViewMatrix:matrix4, VTX:array) {
+        ## init array
+        local ViewVTX = array()
+        #print(VTX:count())
+        ## foreach vertex calc the view vertex
+        for(I = 1, VTX:count()) {
+            #print(I, vec2( ViewMatrix * vec4(VTX[I, vector], 1) ))
+            
+            ViewVTX[I, vector2] = vec2( ViewMatrix * vec4(VTX[I, vector], 1) )
+        }
+
+        return ViewVTX
+    }
+
+    ## clear egp and alloc the index
+    function renderInit(VTX:array, EGP:wirelink) {
+        EGP:egpClear() 
+        for (I = 1, VTX:count()) {
+            ## draw vertices as box
+            EGP:egpBox(I, vec2(0), vec2(10))
+
+        }
+    }
+
+    ## draw vertices to the screen
+    function render(MatrixTable:table, Order:array, VTX:array, EGP:wirelink) {
+        ## get the view vertices
+        local ViewVTX = calcViewvertex(
+            calcViewMatrix(MatrixTable, Order),
+            VTX
+        )
+        #print(VTX)
+        ## draw vertices to the screen
+        for (I = 1, ViewVTX:count()) {
+            ## draw vertices as box
+            EGP:egpPos(I, ViewVTX[I, vector2])
+        }
+    }
+
+
+    ##### first
+
+    ## link the EGP when welded spawned
+    EGP = entity():isWeldedTo():wirelink()
+    
+    ## points of a cube
+    VTX = array(
+    vec( -1,  1, -1), 
+    vec(  1,  1, -1),
+    vec(  1, -1, -1),
+    vec( -1, -1, -1),
+    vec( -1,  1,  1),
+    vec(  1,  1,  1),
+    vec(  1, -1,  1),
+    vec( -1, -1,  1)
+    )
+
+    ## init the table 
+    MatrixTable = table()
+
+    ## define ViewMtxOrder
+    ViewMtxOrder = array(
+        "ScalingMtx",
+        "RotMtx",
+        "TransMtx",
+        "Ortho2DProjMtx"
+    )
+    
+    #EGP:egpBox(1, vec2(10, 10), vec2(10, 10))
+
+    renderInit(VTX, EGP)
+
+    exit()
+}
+
+## tick clk
+if(tickClk()) {
+    Ang += 1
+    ## calc the individual matrix
+    calcMatrix()
+
+    
+    ## render those vertices onto the screeen
+    render(MatrixTable, ViewMtxOrder, VTX, EGP)
+
+    exit()
+    
+}
+
+
+
+
+
+
+
+
+
+
