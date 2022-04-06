@@ -1,0 +1,5 @@
+@name AutoUpdateFromVSC
+
+print(format("###### time: %d: %d: %d ######", time("hour"), time("min"), time("sec")))
+
+#include "repository/lib/test/ObjParser_test.e2"

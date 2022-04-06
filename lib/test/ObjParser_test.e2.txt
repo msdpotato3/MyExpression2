@@ -1,0 +1,58 @@
+@name ObjParser_test
+
+## persist table
+@persist PST_test:table
+
+#include "repository/lib/ObjParser.e2"
+
+local P = PST_test
+if(first()) {
+    ## init table
+    P = table()
+    runOnUse(1)
+
+}
+
+ObjStr = "#comment
+## v x z y blender
+o tri
+v 0 0 0
+v 0 1 0
+v 1 1 0
+## vt 0 0 LeftDown 0 1 LeftUP 1 1 RightUP blender
+vt 0 0
+vt 0 1
+vt 1 1
+vn 0 0 1
+f 1/1/1 3/3/1 2/2/1
+"
+#print("#test:", P:id())
+
+P[1, table] = parseObjText(ObjStr)
+#printTable(PST_ObjParser)
+#printTable(P[1, table])
+
+#[
+    NOTE:
+    FILE STRUCTURE:
+
+    #PST_ObjParser: (P)
+        parserObjText: (FuncP)
+            [Filehash]: (FileP)
+                LinePtr	=	1
+                Line:
+                    1	=	#comment
+                    2	=	## v x z y blender
+                    3	=	o tri
+                    4	=	v 0 0 0
+                    5	=	v 0 1 0
+                    6	=	v 1 1 0
+                    7	=	## vt 0 0 LeftDown 0 1 LeftUP 1 1 RightUP blender
+                    8	=	vt 0 0
+                    9	=	vt 0 1
+                    10	=	vt 1 1
+                    11	=	vn 0 0 1
+                    12	=	f 1/1/1 3/3/1 2/2/1
+                    13	=	
+
+]#

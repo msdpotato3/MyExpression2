@@ -1,0 +1,184 @@
+@name ObjParser
+@persist PST_ObjParser:table
+
+
+if(first()) {
+    
+
+    ## init the persist table
+    ## always init the original table,
+    ## DO NOT init the table from alias!!
+    PST_ObjParser = table(
+        "parserObjText" = table()
+    )
+    
+    ## make a alias for persist table
+    ## P: Persist
+    local P = PST_ObjParser
+    
+    function table parseObjText(ObjString:string) {
+        #[NOTE:
+            OBJ file Structure:
+                v [Number] [Number] [Number] ## vertex position
+                v [Number] [Number] [Number] 
+                ...
+                vt [Number] [Number] ## vertex texture coordinate?
+                vt [Number] [Number]
+                ...
+                vn [Number] [Number] [Number] ## vertex normal
+                vn [Number] [Number] [Number] 
+                ...
+                f [v]/[vt]/[vn] [v]/[vt]/[vn] [v]/[vt]/[vn] [v]/[vt]/[vn] ## face 
+                f [v]/[vt]/[vn] [v]/[vt]/[vn] [v]/[vt]/[vn]
+
+            output:
+                table:
+                    Object_1:
+                        
+                        v:
+                            vec3
+                            vec3
+                            ...
+                        vt:
+                            vec2
+                            vec2
+                            ...
+                        vn:
+                            vec3
+                            vec3
+                            ...
+                        f:
+                            1:
+                                vec3
+                                vec3
+                                vec3
+                                vec3
+                            2:
+                                vec3
+                                vec3
+                                vec3
+                            ...
+                    Object_2:
+                        ...
+                    
+        ]#
+
+        ## debug settings
+        local PerfThreshold = 40
+
+        local P = PST_ObjParser
+        ## set local function table alias
+        ## FuncP: Function Persist
+        local FuncP = PST_ObjParser["parserObjText", table]
+        
+        ## get the hash for the file, use for checking is the file is in progress
+        local Filehash = hash(ObjString)
+        
+        ## check ObjString hash, is this file in progress?
+        ## if not exists (first load)
+        if( !FuncP:exists(Filehash) ) {
+            ## init table
+            FuncP[Filehash, table] = table()
+            
+            ## alias for file persist
+            local FileP = FuncP[Filehash, table]
+
+            ## create a LinePtr a table of this file 
+            FileP["LinePtr", number] = 1  
+            print("#create Ptr")
+
+            
+            #printTable(P)
+            #printTable(FuncP)
+        }
+        ## below is when in progress
+        ## init the table
+        #Output = table()
+
+        ## alias for file persist
+        local FileP = FuncP[Filehash, table]
+
+        ## put each line into a array
+        FileP["Line", array] = ObjString:explode("\n")
+        #print(Line)
+
+        ## if ObjString
+        
+        ## parse text
+        print("#parse text")
+    
+        ## run when ops is enough and Parsing is in progress
+        while(perf(PerfThreshold) ){
+            
+            ## get the array that split by space
+            Seg = FileP["Line", array][ FileP["LinePtr", number], string]:explode(" ")
+
+            print("Seg", Seg)
+            
+            #break ## debuging
+            
+            
+            #switch (Case) {}
+            
+            ## increment the pointer
+            FileP["LinePtr", number] = FileP["LinePtr", number] + 1
+
+            ## break and clean up when finished
+            if(FileP["LinePtr", number] <= FileP["Line", array]:count()) {
+                ## debuging
+                print("#PST_ObjParser: (before cleanup)")
+                printTable(PST_ObjParser)
+                ## clean up
+
+                ## break
+                break
+            }
+        }
+
+        ## debuging
+        print(
+            "\t\nfunction table:\t", 
+            
+            "\n\tPST_ObjParser:\n\t",
+            PST_ObjParser:id(),
+        
+            "\n\tP:\n\t",
+            P:id(),
+        
+            "\n\tFuncP:\n\t",
+            FuncP:id(),
+          
+            "\n\tP[parserObjText]:\n\t",
+            P["parserObjText", table]:id(),
+            
+            "\n\tPST_ObjParser[parserObjText]:\n\t",
+            PST_ObjParser["parserObjText", table]:id()
+
+        )
+        ## debuging
+        print(
+            ".\t", 
+
+            "\n\tFuncP[Filehash, table]:\n\t",
+            FuncP[Filehash, table]:id(),
+
+            "\n\tFileP:\n\t",
+            FileP:id()
+        )
+        ## debuging
+        print("#PST_ObjParser:")
+        printTable(PST_ObjParser)
+        #print("#P:")
+        #printTable(P)
+        
+        ## return the result
+        print("#return")
+        #return Output
+        
+        return table("processing") ## placeholder
+
+    }
+
+
+}
+
