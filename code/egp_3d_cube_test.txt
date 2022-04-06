@@ -3,7 +3,7 @@
 @inputs #EGP:wirelink
 @outputs 
 
-@persist EGP:wirelink VTX:array ViewMtx:matrix4 ViewMtxOrder:array MatrixTable:table
+@persist EGP:wirelink VTX:array ViewMtx:matrix4 ViewMtxOrder:array MatrixTable:table Models:table
 @persist Ang 
 
 ## first clk
@@ -58,10 +58,11 @@ if(first()) {
     function calcMatrix() {
         ## calc the individual matrix
         MatrixTable["ScalingMtx", matrix4] = scaleMatrix(vec(30))
-        #print(Ang)
-        MatrixTable["RotMtx", matrix4] = rotateMatrix(vec(1, 0, 1), Ang)
+        
+        #MatrixTable["RotMtx", matrix4] = rotateMatrix(vec(sin(Ang*2)*2, cos(Ang*2)*2, 1), Ang)
+        MatrixTable["RotMtx", matrix4] = rotateMatrix(vec(1, 1, 1), Ang)
 
-        MatrixTable["TransMtx", matrix4] = transMatrix(vec(50, 50, 0))
+        MatrixTable["TransMtx", matrix4] = transMatrix(vec(100, 100, 0))
 
         MatrixTable["Ortho2DProjMtx", matrix4] = matrix4(
             1, 0, 0, 0,
@@ -173,6 +174,29 @@ if(tickClk()) {
     exit()
     
 }
+
+if(chatClk()) {
+    #print("chatclk")
+    if(lastSpoke() != owner()) {
+        exit()
+    }
+    
+    
+    if(lastSaid():left(4) == ">rin") {
+        
+        renderInit(VTX, EGP)
+        Ang = 0
+        
+        print("render Initialized!")
+        
+        exit()
+    }
+    
+    
+    
+    exit()
+}
+
 
 
 
